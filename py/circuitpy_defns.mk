@@ -438,6 +438,9 @@ endif
 ifeq ($(CIRCUITPY_WIFI),1)
 SRC_PATTERNS += wifi/%
 endif
+ifeq ($(CIRCUITPY_XMAS3),1)
+SRC_PATTERNS += xmas3/%
+endif
 ifeq ($(CIRCUITPY_ZLIB),1)
 SRC_PATTERNS += zlib/%
 endif
@@ -729,6 +732,7 @@ SRC_SHARED_MODULE_ALL = \
 	vectorio/__init__.c \
 	warnings/__init__.c \
 	watchdog/__init__.c \
+	xmas3/__init__.c \
 	zlib/__init__.c \
 
 # All possible sources are listed here, and are filtered by SRC_PATTERNS.

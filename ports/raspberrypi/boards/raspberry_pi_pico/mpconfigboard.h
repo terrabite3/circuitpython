@@ -11,5 +11,6 @@
 
 #define MICROPY_HW_LED_STATUS (&pin_GPIO25)
 
+// TODO I'll want to change this!
 #define CIRCUITPY_BOARD_I2C         (1)
 #define CIRCUITPY_BOARD_I2C_PIN     {{.scl = &pin_GPIO5, .sda = &pin_GPIO4}}
