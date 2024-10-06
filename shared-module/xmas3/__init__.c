@@ -3,13 +3,18 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-uint8_t displayData[8 * 6];
+#include <math.h>
+
+const uint32_t displaySize = 8 * 6;
+uint16_t displayData[8 * 6];
+
+uint16_t lut[256];
 
 void set_led(uint8_t index, uint8_t level)
 {
-    if (index < sizeof(displayData))
+    if (index < displaySize)
     {
-        displayData[index] = level;
+        displayData[index] = lut[level];
     }
 }
 
@@ -17,7 +22,15 @@ void display_func(void);
 
 void display_func(void)
 {
-    uint8_t displayCounters[sizeof(displayData)];
+    for (int i = 0; i < 256; ++i)
+    {
+        double norm = i / 255.0;
+        double adjusted = norm * norm;
+        lut[i] = (int)(adjusted * 65535);
+    }
+
+
+    uint16_t displayCounters[displaySize];
 
     while (true)
     {
@@ -27,8 +40,8 @@ void display_func(void)
             for (uint8_t i = 0; i < 8; ++i)
             {
                 uint8_t index = arm * 8 + i;
-                uint16_t temp = displayCounters[index] + displayData[index];
-                if (temp & 0x100)
+                uint32_t temp = displayCounters[index] + displayData[index];
+                if (temp & 0x10000)
                 {
                     gpio0_7 |= 1 << i;
                 }
@@ -48,7 +61,7 @@ void display_func(void)
             // Assuming the above takes no time (which probably isn't far off),
             // a 1ms delay here will produce a worst-case PDM frequency of 4 Hz
             // (produced by a duty cycle of 1/256).
-            sleep_us(20);
+            sleep_us(50);
         }
     }
 }
