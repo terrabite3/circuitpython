@@ -3,49 +3,73 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-int32_t get_answer(void)
+uint8_t displayData[8 * 6];
+
+void set_led(uint8_t index, uint8_t level)
 {
-    return 42;
-}
-
-
-static uint8_t led_level = 0;
-
-void set_led(uint8_t level)
-{
-    led_level = level;
+    if (index < sizeof(displayData))
+    {
+        displayData[index] = level;
+    }
 }
 
 void display_func(void);
 
 void display_func(void)
 {
-    // SIO (Single-cycle IO) is at offset 0xd0000000
-    // GPIO_OUT_SET is at 0x014
-    uint32_t* GPIO_OUT_SET = (uint32_t*)0xd0000014;
-    uint32_t* GPIO_OUT_CLR = (uint32_t*)0xd0000018;
-    
-    uint8_t counter = 0;
+    uint8_t displayCounters[sizeof(displayData)];
+
     while (true)
     {
-        uint16_t val = counter + led_level;
-        counter = val;
-        if (val & 0x100)
+        for (uint8_t arm = 0; arm < 6; ++arm)
         {
-            *GPIO_OUT_SET = 1;
-        }
-        else
-        {
-            *GPIO_OUT_CLR = 1;
-        }
+            uint8_t gpio0_7 = 0;
+            for (uint8_t i = 0; i < 8; ++i)
+            {
+                uint8_t index = arm * 8 + i;
+                uint16_t temp = displayCounters[index] + displayData[index];
+                if (temp & 0x100)
+                {
+                    gpio0_7 |= 1 << i;
+                }
+                displayCounters[index] = temp;
+            }
 
-        sleep_ms(1);
+            // Drive GPIO8-13 high (off)
+            gpio_set_mask(0x3F00);//(0b11'1111'0000'0000);
+            // Drive GPIO0-7 low (off)
+            gpio_clr_mask(0xFF);
+
+            // Drive the required bits of GPIO0-7 high (on)
+            gpio_set_mask(gpio0_7);
+            // Drive the correct bit of GPIO8-13 low (on)
+            gpio_clr_mask(1 << (arm + 8));
+
+            // Assuming the above takes no time (which probably isn't far off),
+            // a 1ms delay here will produce a worst-case PDM frequency of 4 Hz
+            // (produced by a duty cycle of 1/256).
+            sleep_us(20);
+        }
     }
 }
 
 
 void start_display(void)
 {
+    for (int i = 0; i < 14; ++i)
+    {
+        gpio_init(i);
+        gpio_set_dir(i, GPIO_OUT);
+        gpio_set_drive_strength(i, GPIO_DRIVE_STRENGTH_12MA);
+    }
+
+    for (int i = 14; i < 16; ++i)
+    {
+        gpio_init(i);
+        gpio_set_input_enabled(i, true);
+        gpio_pull_up(i);
+    }
+
     multicore_reset_core1();
     multicore_launch_core1(display_func);
 }

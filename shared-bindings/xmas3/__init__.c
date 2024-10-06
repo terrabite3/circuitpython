@@ -5,29 +5,14 @@
 
 #include "shared-bindings/xmas3/__init__.h"
 
-
-//| """`xmas3` module.
-//|
-//| Provides NOCOMMIT."""
-//|
-//| def get_answer() -> int:
-//|     """Gets 42
-//|     """
-//|     ...
-//|
-static mp_obj_t xmas3_get_answer(void) {
-    int32_t result = get_answer();
-    return MP_OBJ_NEW_SMALL_INT(result);
-}
-static MP_DEFINE_CONST_FUN_OBJ_0(xmas3_get_answer_obj, xmas3_get_answer);
-
-static mp_obj_t xmas3_set_led(mp_obj_t level_obj)
+static mp_obj_t xmas3_set_led(mp_obj_t index_obj, mp_obj_t level_obj)
 {
+    uint8_t index = mp_obj_get_int(index_obj);
     uint8_t level = mp_obj_get_int(level_obj);
-    set_led(level);
+    set_led(index, level);
     return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(xmas3_set_led_obj, xmas3_set_led);
+static MP_DEFINE_CONST_FUN_OBJ_2(xmas3_set_led_obj, xmas3_set_led);
 
 static mp_obj_t xmas3_start_display(void)
 {
@@ -37,10 +22,8 @@ static mp_obj_t xmas3_start_display(void)
 static MP_DEFINE_CONST_FUN_OBJ_0(xmas3_start_display_obj, xmas3_start_display);
 
 
-
 static const mp_rom_map_elem_t xmas3_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_xmas3) },
-    { MP_ROM_QSTR(MP_QSTR_get_answer), MP_ROM_PTR(&xmas3_get_answer_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_led), MP_ROM_PTR(&xmas3_set_led_obj) },
     { MP_ROM_QSTR(MP_QSTR_start_display), MP_ROM_PTR(&xmas3_start_display_obj) },
 };
