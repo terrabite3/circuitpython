@@ -10,6 +10,8 @@ uint16_t displayData[8 * 6];
 
 uint16_t lut[256];
 
+int delayUs;
+
 void set_led(uint8_t index, uint8_t level)
 {
     if (index < displaySize)
@@ -61,13 +63,13 @@ void display_func(void)
             // Assuming the above takes no time (which probably isn't far off),
             // a 1ms delay here will produce a worst-case PDM frequency of 4 Hz
             // (produced by a duty cycle of 1/256).
-            sleep_us(50);
+            sleep_us(delayUs);
         }
     }
 }
 
 
-void start_display(void)
+void start_display(int delayUsArg)
 {
     for (int i = 0; i < 14; ++i)
     {
@@ -82,6 +84,8 @@ void start_display(void)
         gpio_set_input_enabled(i, true);
         gpio_pull_up(i);
     }
+
+    delayUs = delayUsArg;
 
     multicore_reset_core1();
     multicore_launch_core1(display_func);
