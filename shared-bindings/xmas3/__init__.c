@@ -24,19 +24,21 @@ static MP_DEFINE_CONST_FUN_OBJ_1(xmas3_get_led_obj, xmas3_get_led);
 
 static mp_obj_t xmas3_start_display(size_t n_args, const mp_obj_t *args)
 {
-    int delayUs;
-    if (n_args == 1)
+    int delayUs = 50;
+    int minFreq = 30;
+    if (n_args >= 1)
     {
         delayUs = mp_obj_get_int(args[0]);
     }
-    else
+    if (n_args >= 2)
     {
-        delayUs = 50;
+        minFreq = mp_obj_get_int(args[1]);
     }
-    start_display(delayUs);
+
+    start_display(delayUs, minFreq);
     return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(xmas3_start_display_obj, 0, 1, xmas3_start_display);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(xmas3_start_display_obj, 0, 2, xmas3_start_display);
 
 
 static const mp_rom_map_elem_t xmas3_module_globals_table[] = {

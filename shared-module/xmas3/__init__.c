@@ -10,6 +10,8 @@ uint16_t displayData[8 * 6];
 
 uint16_t lut[256];
 
+// This is the minimum frequency that an LED should be allowed to flash
+int minFreq;
 int delayUs;
 
 void set_led(uint8_t index, uint8_t level)
@@ -39,17 +41,27 @@ uint8_t get_led(uint8_t index)
     return 0;
 }
 
-void display_func(void);
-
-void display_func(void)
+static void calculate_lut(void)
 {
-    for (int i = 0; i < 256; ++i)
-    {
-        double norm = i / 255.0;
-        double adjusted = norm * norm;
-        lut[i] = (int)(adjusted * 65535);
-    }
+    // This is the period that an LED would flash at if it were given
+    // the raw value of 1.
+    float fullPeriod = delayUs / 1.0E6 * 65536 * 6;
+    // This is the minimum value (besides 0) that we can give an LED
+    // without dropping below minFreq.
+    uint16_t minValue = minFreq * fullPeriod;
 
+    lut[0] = 0;
+    for (int i = 1; i < 256; ++i)
+    {
+        float norm = i / 255.0;
+        float adjusted = norm * norm;
+        lut[i] = (int)(adjusted * (65535 - minValue) + minValue);
+    }
+}
+
+static void display_func(void)
+{
+    calculate_lut();
 
     uint16_t displayCounters[displaySize];
 
@@ -88,7 +100,7 @@ void display_func(void)
 }
 
 
-void start_display(int delayUsArg)
+void start_display(int delayUsArg, int minFreqArg)
 {
     for (int i = 0; i < 14; ++i)
     {
@@ -105,6 +117,7 @@ void start_display(int delayUsArg)
     }
 
     delayUs = delayUsArg;
+    minFreq = minFreqArg;
 
     multicore_reset_core1();
     multicore_launch_core1(display_func);
