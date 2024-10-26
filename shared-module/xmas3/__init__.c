@@ -20,6 +20,25 @@ void set_led(uint8_t index, uint8_t level)
     }
 }
 
+uint8_t get_led(uint8_t index)
+{
+    if (index < displaySize)
+    {
+        // displayData stores the values from the LUT.
+        // We need to invert the LUT to get the original 8-bit value.
+        uint16_t lutVal = displayData[index];
+        for (uint16_t i = 0; i < 256; ++i)
+        {
+            if (lutVal == lut[i])
+            {
+                return i;
+            }
+        }
+        // We should never get here!
+    }
+    return 0;
+}
+
 void display_func(void);
 
 void display_func(void)

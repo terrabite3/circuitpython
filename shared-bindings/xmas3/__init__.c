@@ -14,6 +14,14 @@ static mp_obj_t xmas3_set_led(mp_obj_t index_obj, mp_obj_t level_obj)
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(xmas3_set_led_obj, xmas3_set_led);
 
+static mp_obj_t xmas3_get_led(mp_obj_t index_obj)
+{
+    uint8_t index = mp_obj_get_int(index_obj);
+    uint8_t level = get_led(index);
+    return mp_obj_new_int(level);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(xmas3_get_led_obj, xmas3_get_led);
+
 static mp_obj_t xmas3_start_display(size_t n_args, const mp_obj_t *args)
 {
     int delayUs;
@@ -34,6 +42,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(xmas3_start_display_obj, 0, 1, xmas3_
 static const mp_rom_map_elem_t xmas3_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_xmas3) },
     { MP_ROM_QSTR(MP_QSTR_set_led), MP_ROM_PTR(&xmas3_set_led_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_led), MP_ROM_PTR(&xmas3_get_led_obj) },
     { MP_ROM_QSTR(MP_QSTR_start_display), MP_ROM_PTR(&xmas3_start_display_obj) },
 };
 static MP_DEFINE_CONST_DICT(xmas3_module_globals, xmas3_module_globals_table);
