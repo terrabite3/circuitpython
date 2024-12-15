@@ -14,7 +14,7 @@ uint16_t lut[256];
 int minFreq;
 int delayUs;
 
-void set_led(uint8_t index, uint8_t level)
+void __no_inline_not_in_flash_func(set_led)(uint8_t index, uint8_t level)
 {
     if (index < displaySize)
     {
@@ -22,7 +22,7 @@ void set_led(uint8_t index, uint8_t level)
     }
 }
 
-uint8_t get_led(uint8_t index)
+uint8_t __no_inline_not_in_flash_func(get_led)(uint8_t index)
 {
     if (index < displaySize)
     {
@@ -41,10 +41,16 @@ uint8_t get_led(uint8_t index)
     return 0;
 }
 
-static void calculate_lut(void)
+static void __no_inline_not_in_flash_func(calculate_lut)(void)
 {
     // This is the period that an LED would flash at if it were given
     // the raw value of 1.
+
+    // Now that the explicit delay is removed from the loop, we use the measured
+    // delay of the loop, which is 5.5 us.
+    // Actually that value might be wrong. Might actually be 1 us. 
+    // But this looks good to my eye.
+    delayUs = 6;
     float fullPeriod = delayUs / 1.0E6 * 65536 * 6;
     // This is the minimum value (besides 0) that we can give an LED
     // without dropping below minFreq.
@@ -59,9 +65,15 @@ static void calculate_lut(void)
     }
 }
 
-static void display_func(void)
+static void __no_inline_not_in_flash_func(display_func)(void)
 {
     calculate_lut();
+
+    // Clear the display
+    for (uint8_t i = 0; i < displaySize; ++i)
+    {
+        displayData[i] = 0;
+    }
 
     uint16_t displayCounters[displaySize];
 
@@ -91,16 +103,18 @@ static void display_func(void)
             // Drive the correct bit of GPIO8-13 low (on)
             gpio_clr_mask(1 << (arm + 8));
 
-            // Assuming the above takes no time (which probably isn't far off),
-            // a 1ms delay here will produce a worst-case PDM frequency of 4 Hz
-            // (produced by a duty cycle of 1/256).
-            sleep_us(delayUs);
+            // There used to be an explicit sleep here, but that was causing problems.
+            // If the sleep routine is running from flash with XIP, then it will break
+            // when we write to flash. But it turns out the loop has an appropriate
+            // speed if we let it free-run.
+            // I think I might be losing 3% brightness by switching too frequently,
+            // but that's pretty acceptable.
         }
     }
 }
 
 
-void start_display(int delayUsArg, int minFreqArg)
+void __no_inline_not_in_flash_func(start_display)(int delayUsArg, int minFreqArg)
 {
     for (int i = 0; i < 14; ++i)
     {
